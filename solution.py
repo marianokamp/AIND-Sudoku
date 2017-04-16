@@ -1,6 +1,6 @@
 import collections
 
-DEBUG = False
+
 assignments = []
 rows = 'ABCDEFGHI'
 cols = '123456789'
@@ -66,27 +66,11 @@ def assert_validity(before, after):
                 display(after)
                 raise AssertionError("Solved box: %s Peer: %s Digit: %s" % (solved_box, peer, singular_value))
 
-def debug(values, msg = ""):
-
-    if not DEBUG:
-        return
-
-    if msg:
-        print(msg)
-
-    print("all?",  all(len(values[box]) == 1 for box in boxes))
-    print("==0?", sum(len(values[box]) == 0 for box in boxes))
-    print("==1?", sum(len(values[box]) == 1 for box in boxes))
-    print(">1?", sum(len(values[box]) > 1 for box in boxes))
-
-
 def assign_value(values, box, value):
     """
     Please use this function to update your values dictionary!
     Assigns a value to a given box. If it updates the board record it.
     """
-    if DEBUG:
-       before = values.copy()
 
     # Don't waste memory appending actions that don't actually change any values
     if values[box] == value:
@@ -96,10 +80,8 @@ def assign_value(values, box, value):
     if len(value) == 1:
         assignments.append(values.copy())
 
-    if DEBUG:
-        assert_validity(before, values)
-
     return values
+
 
 def grid_values(grid):
     """
@@ -130,36 +112,6 @@ def display(values):
                       for c in cols))
         if r in 'CF': print(line)
     return
-
-def eliminate(values):
-    """
-    If one digit is chosen for a box, remove that digit from all peer
-    """
-    debug(values, "before eliminate")
-    for box in boxes:
-        if len(values[box]) == 1:
-            digit = values[box]
-            for peer in peers[box]:
-                if digit in values[peer]:
-                    assert (peer != box)  # FIXME
-                    new_val = values[peer].replace(digit, '')
-                    values = assign_value(values, peer, new_val)
-
-    debug(values, "after eliminate")
-
-    return values
-
-def only_choice_new(values):
-
-    for unit in unitlist:
-
-        for digit in '123456789':
-
-           locations = [box for box in unit if digit in values[box]]
-           if len(locations) == 1:
-               values = assign_value(values, locations[0], digit)
-
-    return values
 
 def naked_twins(values):
     """Eliminate values using the naked twins strategy.
@@ -198,15 +150,14 @@ def naked_twins(values):
     return values
 
 def only_choice(values):
-    """
-    If there is only one choice for a digit in a unit chose that
-    digit from that occurrence and remove it from its peers
-    """
+
     for unit in unitlist:
+
         for digit in '123456789':
-            occurrences = [box for box in unit if digit in values[box]]
-            if len(occurrences) == 1:
-                values = assign_value(values, occurrences[0], digit)
+
+           locations = [box for box in unit if digit in values[box]]
+           if len(locations) == 1:
+               values = assign_value(values, locations[0], digit)
 
     return values
 
@@ -221,13 +172,30 @@ def reduce_puzzle(values):
     still_progressing = True
     while still_progressing:
         no_of_unsolved_values_before = sum([len(values[box]) for box in boxes])
+
         values = eliminate(values)
         values = only_choice(values)
         values = naked_twins(values)
+
         no_of_unsolved_values_after  = sum([len(values[box]) for box in boxes])
 
         still_progressing = no_of_unsolved_values_before > no_of_unsolved_values_after
 
+        if len([box for box in boxes if len(values[box]) == 0]):
+            return False
+
+    return values
+
+def eliminate(values):
+    """
+    Go through all the boxes, and whenever there is a box with a value, eliminate this value from the values of all its peers.
+    Input: A sudoku in dictionary form.
+    Output: The resulting sudoku in dictionary form.
+    """
+    for k in values.keys():
+        if len(values[k]) == 1:
+            for c in peers[k]:
+                values[c] = values[c].replace(values[k],'')
     return values
 
 def search(values):
@@ -245,13 +213,12 @@ def search(values):
 
     values = reduce_puzzle(values)
 
-    if all(len(values[box]) == 1 for box in boxes):
-        return values # our job here is done, we have a winner
-
     if values == False:
         return False
 
-    debug(values)
+    if all(len(values[box]) == 1 for box in boxes):
+        return values # our job here is done, we have a winner
+
 
     _, next_cell = min([(len(values[box]), box) for box in boxes if len(values[box]) > 1])
 
@@ -259,9 +226,10 @@ def search(values):
 
     for digit in values[next_cell]:
         new_sudoku = values.copy()
-        new_sudoku = assign_value(new_sudoku, next_cell, digit)
+        #new_sudoku = assign_value(new_sudoku, next_cell, digit)
+        new_sudoku[next_cell] = digit
         results = search(new_sudoku)
-        if results != False:
+        if results:
             return results
 
 def solve(grid):
@@ -274,11 +242,24 @@ def solve(grid):
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
 
-    values = grid_values(grid) # TODO may need to take care of using assign_value during setup
+    values = grid_values(grid)
     return search(values)
 
 if __name__ == '__main__':
-    diag_sudoku_grid ='''
+
+    diag_sudoku_grid = '''
+    9.1....8.
+    8.5.7..4.
+    2.4....6.
+    ..7......
+    5........
+    ......83.
+    3..6.....
+    .9.......
+    .........
+    '''
+
+    diag_sudoku_grid2 ='''
     2.. ... ...
     ... ..6 2..
     ..1 ... .7.
@@ -290,21 +271,11 @@ if __name__ == '__main__':
     ... ... ..3
     '''
 
-    diag_sudoku_grid2 = '''
-        53. .7. ...
-        6.. 195 ...
-        .98 ... .6.
+    diag_sudoku_grid3 = "9.1....8.8.5.7..4.2.4....6...7......5..............83.3..6......9................"
+    diag_sudoku_grid4 = "........4......1.....6......7....2.8...372.4.......3.7......4......5.6....4....2."
 
-        8.. .6. ..3
-        4.. 8.3 ..1
-        7.. .2. ..6
-
-        .6. ... 28.
-        ... 419 ..5
-        ... .8. .79
-
-        '''
-    display(solve(diag_sudoku_grid))
+    for diag in [diag_sudoku_grid, diag_sudoku_grid2, diag_sudoku_grid3, diag_sudoku_grid4]:
+        display(solve(diag))
 
     try:
         from visualize import visualize_assignments
