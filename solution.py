@@ -264,13 +264,6 @@ def search(values):
         if results != False:
             return results
 
-    # This should never happen as it would mean we had a next_cell
-    # but trying out all "possible" digits didn't lead to a solution
-
-    #assert(False)
-
-    #return False
-
 def solve(grid):
     """
     Find the solution to a Sudoku grid.
@@ -280,8 +273,6 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
-    print("oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo")
-
 
     values = grid_values(grid) # TODO may need to take care of using assign_value during setup
     return search(values)
