@@ -28,7 +28,7 @@ peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)  # lookup table
 
 def assert_validity(before, after):
     """
-    In case of a contraints validation, we know
+    In case of a contraints violation, we know
     exactly when it happened as an assertion
     error with stack trace will be raised.
 
