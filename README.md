@@ -6,7 +6,7 @@ Q: How do we use constraint propagation to solve the naked twins problem?
 
 A: Apply inference to the problem space.
 
-Given that the search we will later on apply is brute forcing it, at worst trying out all open values,
+Given that the search - we will later on apply - is brute forcing it, at worst trying out all open values,
 we will combine that approach with using inference. We use inference to cut down the problem space first (and continuously thereafter).
 For simpler Sudokus this should do the trick already. Otherwise we will resort to search to get to a solution, but even then search is an
 iterative approach trying out remaining combinations, and benefits from applying inference to new states of the Sudoku.
@@ -15,34 +15,34 @@ The inference itself is implemented in only_choice, eliminate and naked_twins. I
 which of the remaining values can be removed (reduce_puzzle).
 
 Let's illustrate with this question's subject: Naked Twins.
-We concentrate on one unit
-(more on what a unit is in the answer to the next question) at a time and try to find within the
-unit currently observed to find two boxes that only contain exactly two values and exactly
+We concentrate on one unit at a time and try to find within the current unit two boxes that only contain exactly two values and exactly
 the same in both boxes.
 
 Given the rule that every digit from 1 to 9 can only be used once, it is clear that these digits
 must be in either of these two boxes. This by itself doesn't help with the two boxes at hand,
-but we can infer that the digits in those two boxes cannot be valid assignments in the remaining
-boxes of the **same** unit.
+but we can infer that because we have to use those digits in these two boxes eventually (just the order in not known yet),
+those digits cannot be valid assignments in the remaining
+boxes of the **same** unit as we only can have each digit (1 to 9) once within a unit.
 
 We can therefore remove those digits from all other boxes of the unit.
 
-
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
+
 A: The structure of the existing code decoupled the representation of a unit from the constraints that can be applied to it.
 
-The code introduced a unit, which is a collection of boxes. The shape of a unit is in general arbitrary, but implicitly needs to be of length 9 as a global constraint is
+The code introduced the concept of a unit, which is a collection of boxes. The shape of a unit is in general arbitrary,
+but implicitly needs to be of length 9 as a global constraint is
 that all digits from 1 to 9 must occur once and only once in a unit. The layout however is arbitrary. The classic layouts are rows, columns and squares, but it would be
 possible as well to lay the boxes out circularly around the center of the Sudoku.
 
 Here the question was about the diagonals. These are represented as two more units, one from top-left to bottom-right and one from top-right to bottom-left.
 
-Adding them to the existing units was the only change necessary.  For the generic logic is only counts that there are 9 boxes, if you look at them from the perspective of a single box there is this single box and eight peers. This is handled by the existing code already.
+Adding them to the existing units was the only change necessary.  For the generic logic it only counts that there are 9 boxes, if you look at them from the perspective of a single box there is this single box and eight peers. This is handled by the existing code already.
 
-As all constraints are agnostic to their unit's layout, the existing constraints could be applied as-is, meaning that naked twins can be found as well as the other two methods can be applied.
+As all constraints are agnostic to their unit's layout, the existing constraints could be applied as-is, meaning that even for the two diagonal units "naked twins" can be found as well as the other two methods can be applied.
 
-All existing constraints are automatically propagated. 
+All existing constraints are automatically propagated.
 
 ### Install
 
